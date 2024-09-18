@@ -1,8 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { App } from './App';
-import { mergeStyles } from '@fluentui/react';
+import { initializeIcons, mergeStyles } from '@fluentui/react';
 import reportWebVitals from './reportWebVitals';
+
+initializeIcons();
 
 // Inject some global styles
 mergeStyles({
@@ -12,6 +14,7 @@ mergeStyles({
     height: '100vh',
   },
 });
+
 
 // eslint-disable-next-line no-restricted-globals
 ReactDOM.render(<App />, document.getElementById('root'));
