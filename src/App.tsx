@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Stack, Text, Link, FontWeights, IStackTokens, IStackStyles, ITextStyles, ThemeProvider, mergeStyles, FontIcon, PrimaryButton } from '@fluentui/react';
+import { 
+  Stack, Text, Link, FontWeights, IStackTokens, IStackStyles, 
+  ITextStyles, ThemeProvider, mergeStyles, 
+  FontIcon, PrimaryButton, getTheme } from '@fluentui/react';
 import logo from './logo.svg';
 import './App.css';
 import { DARK, useTheme, webDarkTheme, webLightTheme } from './theme';
@@ -33,6 +36,8 @@ export const App: React.FunctionComponent = () => {
   const [ speechState, updateSpeechState ] = useState(false);
   const { transcript } = useSpeechRecognition();
 
+  const currTheme = getTheme();
+  
   const listenToUser = () => {
     console.log("listenToUser called with state " + speechState);
     if (speechState == false) {
@@ -43,7 +48,14 @@ export const App: React.FunctionComponent = () => {
       updateSpeechState(false);
 
     }
-  }
+  };
+
+  const speakPage = () => {
+    const utterance = new SpeechSynthesisUtterance();
+    utterance.text = document.body.innerText;
+    window.speechSynthesis.speak(utterance);
+  };
+  
   return (
     <ThemeProvider theme={appliedTheme}>
       <Stack horizontalAlign="center" verticalAlign="center" verticalFill styles={stackStyles} tokens={stackTokens}>
@@ -57,6 +69,11 @@ export const App: React.FunctionComponent = () => {
           text="Talk"
           onClick={listenToUser} 
           styles={{ root: { color: speechState ? "red" : ""}}}
+          />
+        <PrimaryButton
+          iconProps={{ iconName: "Microphone" }}
+          text="Read Page Aloud"
+          onClick={speakPage} 
           />
         <Text variant="large">For a guide on how to customize this project, check out the Fluent UI documentation.</Text>
         <Text variant="large" styles={boldStyle}>
