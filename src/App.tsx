@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { 
   Stack, Text, Link, FontWeights, IStackTokens, IStackStyles, 
   ITextStyles, ThemeProvider, mergeStyles, 
-  FontIcon, PrimaryButton, getTheme } from '@fluentui/react';
+  FontIcon, PrimaryButton, getTheme, 
+  TextField} from '@fluentui/react';
+import { Controller, useForm } from "react-hook-form";
 import logo from './logo.svg';
 import './App.css';
 import { DARK, useTheme, webDarkTheme, webLightTheme } from './theme';
@@ -33,20 +35,18 @@ const buttonStyles = {
 export const App: React.FunctionComponent = () => {
   const { theme, updateTheme } = useTheme();
   const appliedTheme = theme === DARK ? webDarkTheme : webLightTheme;
-  const [ speechState, updateSpeechState ] = useState(false);
-  const { transcript } = useSpeechRecognition();
+  const { transcript, listening, resetTranscript } = useSpeechRecognition();
 
   const currTheme = getTheme();
-  
+
+  const [summaryText, setSummaryText] = useState<string>("");
+
   const listenToUser = () => {
-    console.log("listenToUser called with state " + speechState);
-    if (speechState == false) {
+    console.log("listenToUser called.  listening = " + listening);
+    if (listening == false) {
       SpeechRecognition.startListening();
-      updateSpeechState(true);
     } else {
       SpeechRecognition.stopListening();
-      updateSpeechState(false);
-
     }
   };
 
@@ -55,43 +55,60 @@ export const App: React.FunctionComponent = () => {
     utterance.text = document.body.innerText;
     window.speechSynthesis.speak(utterance);
   };
-  
+
+  useEffect(() => {
+    if (listening === false) {
+      resetTranscript();
+      // TODO: Insert text where the cursor is.  For now, let's just append.
+      setSummaryText(summaryText + transcript);
+      console.log("clearing transcript");
+    }
+  }, [listening]);
+
+  const onStatusChange = (e: FormEvent<HTMLInputElement | HTMLTextAreaElement>, fieldValue?: string | undefined) => {
+  // const onStatusChange = <T extends {}>(fieldName: string, fieldValue: T) => {
+    const fieldValueString = `${fieldValue}`;
+    // setValue("status", `${fieldValue}`);
+    setSummaryText(fieldValueString); // replace with line above in Ceres
+    console.log(fieldValueString);
+    // setNewStatusReasonDescription(
+    //   !isStringEmpty(fieldValueString)
+    //     ? `${new Date().toDateString()}: ${fieldValue} ${HookInlineFormStrings.by} ${getUserUpn()}.`
+    //     : ""
+    // );
+    // fieldValue && trigger("status");
+  };
+
   return (
     <ThemeProvider theme={appliedTheme}>
       <Stack horizontalAlign="center" verticalAlign="center" verticalFill styles={stackStyles} tokens={stackTokens}>
         <img className="App-logo" src={logo} alt="logo" />
-        {/* <FontIcon aria-label="Compass" iconName="Microphone" className={iconClass} onClick={listenToUser} style={{ border: "1px solid red"}}/> */}
-        <Text variant="xxLarge" styles={boldStyle}>
-          Custom welcome message: { transcript }
-        </Text>
-        <PrimaryButton
-          iconProps={{ iconName: "Microphone" }}
-          text="Talk"
-          onClick={listenToUser} 
-          styles={{ root: { color: speechState ? "red" : ""}}}
-          />
+
         <PrimaryButton
           iconProps={{ iconName: "Microphone" }}
           text="Read Page Aloud"
           onClick={speakPage} 
           />
-        <Text variant="large">For a guide on how to customize this project, check out the Fluent UI documentation.</Text>
-        <Text variant="large" styles={boldStyle}>
-          Essential links
-        </Text>
+        <hr/>
+        <p>
+          Press Talk to append text to the text field.
+        </p>
+        <PrimaryButton
+          iconProps={{ iconName: "Microphone" }}
+          text="Talk"
+          onClick={listenToUser} 
+          styles={{ root: { color: listening ? "red" : ""}}}
+          />
         <Stack horizontal tokens={stackTokens} horizontalAlign="center">
-          <Link href="https://developer.microsoft.com/en-us/fluentui#/get-started/web">Docs</Link>
-          <Link href="https://stackoverflow.com/questions/tagged/office-ui-fabric">Stack Overflow</Link>
-          <Link href="https://github.com/microsoft/fluentui/">Github</Link>
-          <Link href="https://twitter.com/fluentui">Twitter</Link>
-        </Stack>
-        <Text variant="large" styles={boldStyle}>
-          Design system
-        </Text>
-        <Stack horizontal tokens={stackTokens} horizontalAlign="center">
-          <Link href="https://developer.microsoft.com/en-us/fluentui#/styles/web/icons">Icons</Link>
-          <Link href="https://developer.microsoft.com/en-us/fluentui#/styles/web">Styles</Link>
-          <Link href="https://aka.ms/themedesigner">Theme designer</Link>
+        <form>
+          <TextField
+            value={summaryText + transcript}
+            id="status"
+            onChange={onStatusChange}
+            multiline={true}
+          />
+        </form>
+
         </Stack>
       </Stack>
     </ThemeProvider>
